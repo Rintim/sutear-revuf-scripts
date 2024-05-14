@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@preact/signals": "^1.2.3",
     "jszip": "^3.10.1",
     "preact": "^10.21.0",
     "react": "npm:@preact/compat",
