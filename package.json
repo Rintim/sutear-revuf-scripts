@@ -1,0 +1,17 @@
+{
+  "name": "@sutear-revuf/scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "preact": "^10.21.0",
+    "react": "npm:@preact/compat",
+    "react-dom": "npm:@preact/compat"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.2.0",
+    "eslint": "^9.2.0",
+    "globals": "^15.2.0",
+    "prettier": "^3.2.5",
+    "typescript-eslint": "^7.9.0"
+  }
+}
