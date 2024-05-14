@@ -85,10 +85,16 @@ async function download(map: [string, FileData][], body: HTMLElement = document.
 					.then(blob => {
 						result.set(name, blob);
 						downloading.value = downloading.value.filter(([key]) => key != name);
+					})
+					.catch(e => {
+						console.error(`${name}: ${e}`);
+						downloading.value = downloading.value.filter(([key]) => key != name);
 					}),
 			],
 		];
 	}
+
+	await Promise.allSettled(downloading.peek());
 
 	element.remove();
 
