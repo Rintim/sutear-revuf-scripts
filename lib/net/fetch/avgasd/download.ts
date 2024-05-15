@@ -1,8 +1,11 @@
-import { h, Fragment, JSX } from "preact";
+import { h } from "preact";
 import { useSignal, useComputed, useSignalEffect } from "@preact/signals";
+import htm from "htm";
 
 import type { FileList } from "./type";
 import { Mutex } from "./mutex";
+
+const html = htm.bind(h);
 
 export function App(props: DownloadProps) {
 	const coreNumber = navigator.hardwareConcurrency;
@@ -10,15 +13,11 @@ export function App(props: DownloadProps) {
 	let downloadingNames = useSignal([] as string[]);
 	let downloadingProgress = useSignal({} as Record<string, number>);
 	let downloadingInfo = useComputed(() => {
-		let result: JSX.Element[] = [];
+		let result = [];
 		let progress = downloadingProgress.value;
 
 		for (let name of downloadingNames.value) {
-			result.push(
-				<li>
-					{name}: {progress[name]}%
-				</li>,
-			);
+			result.push(html`<li>${name}: ${progress[name]}%</li>`);
 		}
 
 		return result;
@@ -93,12 +92,12 @@ export function App(props: DownloadProps) {
 		}
 	});
 
-	return (
-		<>
-			<h1>Current Downloading</h1>
-			<ul>{downloadingInfo}</ul>
-		</>
-	);
+	return html`
+		<h1>Current Downloading</h1>
+		<ul>
+			${downloadingInfo}
+		</ul>
+	`;
 }
 
 export interface DownloadProps {

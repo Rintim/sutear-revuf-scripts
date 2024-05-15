@@ -1,8 +1,11 @@
 import JSZip from "jszip";
-import { h, Fragment, render } from "preact";
+import { h, render } from "preact";
+import htm from "htm";
 
 import type { FileData, FileList } from "./type";
 import { App as DownloadApp } from "./download";
+
+const html = htm.bind(h);
 
 export async function downloadFiles(
 	files: Record<string, FileData>,
@@ -37,7 +40,7 @@ async function download(map: FileList, body: HTMLElement = document.body): Promi
 	body.appendChild(element);
 
 	let result = await new Promise<Map<string, Blob>>(
-		resolve => void render(<DownloadApp files={map} onFinished={resolve} />, element),
+		resolve => void render(html`<${DownloadApp} files=${map} onFinished=${resolve} />`, element),
 	);
 
 	element.remove();
