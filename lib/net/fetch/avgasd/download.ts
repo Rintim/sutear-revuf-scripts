@@ -1,4 +1,5 @@
 import { h } from "preact";
+import { useEffect } from "preact/hooks";
 import { useSignal, useComputed, useSignalEffect } from "@preact/signals";
 import htm from "htm";
 
@@ -31,7 +32,7 @@ export function App(props: DownloadProps) {
 		else mutex.unlock();
 	});
 
-	queueMicrotask(async () => {
+	useEffect(() => {
 		let result = new Map<string, Blob>();
 
 		let files = props.files.slice(0);
@@ -39,58 +40,60 @@ export function App(props: DownloadProps) {
 		let currentLength = 0;
 
 		while (files.length) {
-			await mutex.wait();
+			mutex.wait().then(() => {
+				let [name, data] = files.shift();
+				let url = data.url();
 
-			let [name, data] = files.shift();
-			let url = data.url();
+				fetch(url, {
+					credentials: "same-origin",
+					headers: new Headers({
+						"User-Agent": navigator.userAgent,
+					}),
+				})
+					.then(async response => {
+						let current = 0;
+						let total = parseInt(response.headers.get("content-length"));
+						let reader = response.body.getReader();
+						let resultCollection = [] as Uint8Array[];
 
-			fetch(url, {
-				credentials: "same-origin",
-				headers: new Headers({
-					"User-Agent": navigator.userAgent,
-				}),
-			})
-				.then(async response => {
-					let current = 0;
-					let total = parseInt(response.headers.get("content-length"));
-					let reader = response.body.getReader();
-					let resultCollection = [] as Uint8Array[];
-
-					downloadingProgress.value = {
-						...downloadingProgress.value,
-						name: 0,
-					};
-					downloadingNames.value = [...downloadingNames.value, name];
-
-					while (true) {
-						const { value, done } = await reader.read();
-						if (done) {
-							result.set(name, new Blob(resultCollection));
-							downloadingProgress.value = {
-								...downloadingProgress.value,
-								name: undefined,
-							};
-							delete downloadingProgress.value[name];
-							downloadingNames.value = downloadingNames.value.filter(key_1 => key_1 != name);
-
-							if (++currentLength >= totalLength) {
-								props.onFinished(result);
-							}
-							return;
-						}
-						resultCollection.push(value);
-						current += value.byteLength;
 						downloadingProgress.value = {
 							...downloadingProgress.value,
-							name: Math.floor((current / total) * 100) / 100,
+							name: 0,
 						};
-					}
-				})
-				.catch(e => {
-					console.error(`${name}: ${e}`);
-				});
+						downloadingNames.value = [...downloadingNames.value, name];
+
+						while (true) {
+							const { value, done } = await reader.read();
+							if (done) {
+								result.set(name, new Blob(resultCollection));
+								downloadingProgress.value = {
+									...downloadingProgress.value,
+									name: undefined,
+								};
+								delete downloadingProgress.value[name];
+								downloadingNames.value = downloadingNames.value.filter(
+									key_1 => key_1 != name,
+								);
+
+								if (++currentLength >= totalLength) {
+									props.onFinished(result);
+								}
+								return;
+							}
+							resultCollection.push(value);
+							current += value.byteLength;
+							downloadingProgress.value = {
+								...downloadingProgress.value,
+								name: Math.floor((current / total) * 100) / 100,
+							};
+						}
+					})
+					.catch(e => {
+						console.error(`${name}: ${e}`);
+					});
+			});
 		}
-	});
+	}, []);
 
 	return html`
 		<h1>Current Downloading</h1>
