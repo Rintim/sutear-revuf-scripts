@@ -28,7 +28,7 @@ function init(children: HTMLElement[]) {
 	});
 }
 
-async function download(map: FileList, body: HTMLElement = document.body): Map<string, Blob> {
+async function download(map: FileList, body: HTMLElement = document.body): Promise<Map<string, Blob>> {
 	let element = document.createElement("main");
 
 	element.style.width = "100%";
