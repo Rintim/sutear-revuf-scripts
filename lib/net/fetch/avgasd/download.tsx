@@ -68,7 +68,7 @@ export class App extends Component<DownloadProps, DownloadState> {
 						this.setState({
 							downloadingProgress: {
 								...this.state.downloadingProgress,
-								[name]: Math.floor((current / total) * 100),
+								[name]: Math.floor((current / total) * 10000) / 100,
 							},
 						});
 					}

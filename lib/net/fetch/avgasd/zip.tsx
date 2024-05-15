@@ -34,7 +34,7 @@ export class App extends Component<ZipProps, ZipState> {
 	render(_props?: RenderableProps<ZipProps, any>, state?: Readonly<ZipState>): ComponentChild {
 		return (
 			<>
-				<p>Percent: {state.percent.toFixed(2)}%</p>
+				<p>Percent: {Math.floor(state.percent)}%</p>
 				<p>Current File: {state.currentFile}</p>
 			</>
 		);
