@@ -1,5 +1,4 @@
 import { h, Fragment, JSX, Component, ComponentChild } from "preact";
-import { useEffect } from "preact/hooks";
 import { signal, computed, effect, batch } from "@preact/signals";
 
 import type { FileList } from "./type";
@@ -8,9 +7,9 @@ import { Mutex } from "./mutex";
 export class App extends Component<DownloadProps> {
 	private coreNumber = navigator.hardwareConcurrency;
 	private mutex = new Mutex();
-	downloadingNames = signal([] as string[]);
-	downloadingProgress = signal({} as Record<string, number>);
-	downloadingInfo = computed(() => {
+	static downloadingNames = signal([] as string[]);
+	static downloadingProgress = signal({} as Record<string, number>);
+	static downloadingInfo = computed(() => {
 		let result: JSX.Element[] = [];
 		let progress = this.downloadingProgress.value;
 
@@ -28,7 +27,7 @@ export class App extends Component<DownloadProps> {
 	constructor() {
 		super();
 		effect(() => {
-			let length = this.downloadingNames.value.length;
+			let length = App.downloadingNames.value.length;
 
 			if (length > this.coreNumber) this.mutex.lock();
 			else this.mutex.unlock();
@@ -59,26 +58,28 @@ export class App extends Component<DownloadProps> {
 						let reader = response.body.getReader();
 						let resultCollection = [] as Uint8Array[];
 
-						this.downloadingProgress.value = {
-							...this.downloadingProgress.value,
+						App.downloadingProgress.value = {
+							...App.downloadingProgress.value,
 							name: 0,
 						};
-						this.downloadingNames.value = [...this.downloadingNames.value, name];
+						App.downloadingNames.value = [...App.downloadingNames.value, name];
 
 						while (true) {
 							const { value, done } = await reader.read();
 							if (done) {
 								result.set(name, new Blob(resultCollection));
-								this.downloadingProgress.value = {
-									...this.downloadingProgress.value,
-									name: undefined,
-								};
+
 								batch(() => {
-									delete this.downloadingProgress.value[name];
-									this.downloadingNames.value = this.downloadingNames.value.filter(
-										key_1 => key_1 != name,
-									);
+									App.downloadingProgress.value = {
+										...App.downloadingProgress.value,
+										name: undefined,
+									};
+									delete App.downloadingProgress.value[name];
 								});
+
+								App.downloadingNames.value = App.downloadingNames.value.filter(
+									key => key != name,
+								);
 
 								if (++currentLength >= totalLength) {
 									this.props.onFinished(result);
@@ -87,8 +88,8 @@ export class App extends Component<DownloadProps> {
 							}
 							resultCollection.push(value);
 							current += value.byteLength;
-							this.downloadingProgress.value = {
-								...this.downloadingProgress.value,
+							App.downloadingProgress.value = {
+								...App.downloadingProgress.value,
 								name: Math.floor((current / total) * 100) / 100,
 							};
 						}
@@ -104,7 +105,7 @@ export class App extends Component<DownloadProps> {
 		return (
 			<>
 				<h1>Current Downloading</h1>
-				<ul>${this.downloadingInfo}</ul>
+				<ul>${App.downloadingInfo}</ul>
 			</>
 		);
 	}
