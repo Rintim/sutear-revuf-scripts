@@ -24,7 +24,12 @@ export class App extends Component<DownloadProps, DownloadState> {
 
 		function parse(name: string, data: FileData) {
 			let folders = name.split("/");
-			if (folders.length <= 1 || /[a-z]:/.test(folders[0])) return;
+			if (folders.length <= 1 || /[a-z]:/.test(folders[0])) {
+				if (++currentLength >= totalLength) {
+					this.props.onFinished(result);
+				}
+				return;
+			}
 
 			this.setState({
 				downloadingProgress: {
