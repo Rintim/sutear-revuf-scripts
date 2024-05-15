@@ -80,7 +80,7 @@ export class App extends Component<DownloadProps, DownloadState> {
 
 		files.reduce(
 			(last, [name, data]) =>
-				last.then(this.mutex.wait.bind(this.mutex)).then(() => void parse(name, data)),
+				last.then(this.mutex.wait.bind(this.mutex)).then(() => void parse.call(this, name, data)),
 			Promise.resolve(),
 		);
 	}
