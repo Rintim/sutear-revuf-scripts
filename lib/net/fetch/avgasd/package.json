@@ -1,7 +1,7 @@
 {
 	"name": "@sutear-revuf/scripts-lib-net-fetch",
 	"type": "module",
-	"main": "mod.js",
+	"main": "mod.tsx",
 	"dependencies": {
 		"@preact/signals": "^1.2.3",
 		"jszip": "^3.10.1",
