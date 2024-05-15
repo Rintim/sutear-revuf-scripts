@@ -35,7 +35,6 @@ async function download(map: FileList, body: HTMLElement = document.body): Promi
 	element.style.height = "100%";
 	element.style.backgroundColor = "white";
 	body.appendChild(element);
-	element.innerHTML = `<p>Current Downloading:</p>`;
 
 	let result = await new Promise<Map<string, Blob>>(
 		resolve => void render(<DownloadApp files={map} onFinished={resolve} />, element),
