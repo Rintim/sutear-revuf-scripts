@@ -1,8 +1,8 @@
 import { h, Fragment, JSX } from "preact";
 import { useSignal, useComputed, useSignalEffect } from "@preact/signals";
 
-import type { FileList } from "./type.ts";
-import { Mutex } from "./mutex.ts";
+import type { FileList } from "./type";
+import { Mutex } from "./mutex";
 
 export function App(props: DownloadProps) {
 	const coreNumber = navigator.hardwareConcurrency;

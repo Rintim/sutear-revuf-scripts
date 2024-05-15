@@ -2,16 +2,16 @@
 	"compilerOptions": {
 		"baseUrl": "./",
 		"target": "ESNext",
-		"module": "NodeNext",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
 		"noEmit": true,
 		"allowJs": true,
 		"checkJs": true,
-		"allowImportingTsExtensions": true,
 		/* Preact Config */
 		"jsx": "react",
 		"jsxFactory": "h",
 		"jsxFragmentFactory": "Fragment",
-		"skipLibCheck": true,
+		"skipLibCheck": true
 	},
 	"include": [
 		"**/*"
