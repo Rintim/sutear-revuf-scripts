@@ -2,7 +2,7 @@
 /** @jsxFrag Fragment */
 import JSZip from "jszip";
 import { h, Fragment, render } from "preact";
-import { effect, useSignal } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 
 export async function downloadFiles(
 	files: Record<string, FileData>,
@@ -44,7 +44,14 @@ async function download(map: [string, FileData][], body: HTMLElement = document.
 	let mutex: Promise<void> | null = null;
 	let mutexResolve: (() => void) | null = null;
 
-	let downloading = useSignal([] as [string, Promise<void>][]);
+	let downloading = signal([] as [string, Promise<void>][]);
+
+	element.style.width = "100%";
+	element.style.height = "100%";
+	element.style.backgroundColor = "white";
+	document.body.appendChild(element);
+	element.innerHTML = `<p>Current Downloading:</p>`;
+
 	effect(() => {
 		let length = downloading.value.length;
 		if (length <= coreNumber && mutexResolve) {
@@ -53,19 +60,16 @@ async function download(map: [string, FileData][], body: HTMLElement = document.
 		} else if (length > coreNumber && !mutexResolve) {
 			mutex = new Promise(resolve => (mutexResolve = resolve));
 		}
-	});
 
-	render(
-		<>
-			<p>Current Downloadings:</p>
-			<>
-				{downloading.value.map(([name]) => (
-					<p>{name}</p>
-				))}
-			</>
-		</>,
-		element,
-	);
+		element.innerHTML = `
+			<p>Current Downloading:</p>
+			${downloading.value
+				.map(([name]) => {
+					return `<p>${name}</p>`;
+				})
+				.join("")}
+		`;
+	});
 
 	while (map.length > 0) {
 		if (mutex) await mutex;
@@ -100,3 +104,5 @@ async function download(map: [string, FileData][], body: HTMLElement = document.
 
 	return result;
 }
+
+function DownloadApp() {}
