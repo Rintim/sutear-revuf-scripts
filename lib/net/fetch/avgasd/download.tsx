@@ -25,6 +25,14 @@ export class App extends Component<DownloadProps, DownloadState> {
 		function parse(name: string, data: FileData) {
 			let url = data.url();
 
+			this.setState({
+				downloadingProgress: {
+					...this.state.downloadingProgress,
+					[name]: 0,
+				},
+				downloadingNames: [...this.state.downloadingNames, name],
+			});
+
 			fetch(url, {
 				credentials: "same-origin",
 				headers: new Headers({
@@ -36,14 +44,6 @@ export class App extends Component<DownloadProps, DownloadState> {
 					let total = parseInt(response.headers.get("content-length"));
 					let reader = response.body.getReader();
 					let resultCollection = [] as Uint8Array[];
-
-					this.setState({
-						downloadingProgress: {
-							...this.state.downloadingProgress,
-							[name]: 0,
-						},
-						downloadingNames: [...this.state.downloadingNames, name],
-					});
 
 					while (true) {
 						const { value, done } = await reader.read();
@@ -75,6 +75,13 @@ export class App extends Component<DownloadProps, DownloadState> {
 				})
 				.catch(e => {
 					console.error(`${name}: ${e}`);
+
+					let progress = this.state.downloadingProgress;
+					delete progress[name];
+					this.setState({
+						downloadingNames: this.state.downloadingNames.filter(key => key != name),
+						downloadingProgress: progress,
+					});
 				});
 		}
 
