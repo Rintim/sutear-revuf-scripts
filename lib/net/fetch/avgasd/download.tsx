@@ -68,7 +68,7 @@ export class App extends Component<DownloadProps, DownloadState> {
 						this.setState({
 							downloadingProgress: {
 								...this.state.downloadingProgress,
-								[name]: Math.floor((current / total) * 100) / 100,
+								[name]: Math.floor((current / total) * 100),
 							},
 						});
 					}
@@ -79,7 +79,8 @@ export class App extends Component<DownloadProps, DownloadState> {
 		}
 
 		files.reduce(
-			(last, [name, data]) => last.then(this.mutex.wait).then(() => void parse(name, data)),
+			(last, [name, data]) =>
+				last.then(this.mutex.wait.bind(this.mutex)).then(() => void parse(name, data)),
 			Promise.resolve(),
 		);
 	}
