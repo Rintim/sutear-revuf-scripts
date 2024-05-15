@@ -1,8 +1,8 @@
 import JSZip from "jszip";
 import { h, Fragment, render } from "preact";
 
-import type { FileData, FileList } from "type";
-import { App as DownloadApp } from "download";
+import type { FileData, FileList } from "./type.ts";
+import { App as DownloadApp } from "./download.tsx";
 
 export async function downloadFiles(
 	files: Record<string, FileData>,

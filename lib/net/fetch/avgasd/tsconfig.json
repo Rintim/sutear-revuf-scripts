@@ -2,11 +2,11 @@
 	"compilerOptions": {
 		"baseUrl": "./",
 		"target": "ESNext",
-		"module": "ESNext",
-		"moduleResolution": "bundler",
+		"module": "NodeNext",
 		"noEmit": true,
 		"allowJs": true,
 		"checkJs": true,
+		"allowImportingTsExtensions": true,
 		/* Preact Config */
 		"jsx": "react",
 		"jsxFactory": "h",
