@@ -93,6 +93,8 @@ export function App(props: DownloadProps) {
 					});
 			});
 		}
+
+		return () => {};
 	}, []);
 
 	return html`
