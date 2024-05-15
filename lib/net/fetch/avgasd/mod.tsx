@@ -30,6 +30,10 @@ export async function downloadFiles(
 		}, 100);
 	});
 	a.click();
+
+	bodyChildElements.forEach((child, index) => {
+		child.hidden = originHiddenStatus[index];
+	});
 }
 
 function init(children: HTMLElement[]) {
