@@ -23,7 +23,8 @@ export class App extends Component<DownloadProps, DownloadState> {
 		let currentLength = 0;
 
 		function parse(name: string, data: FileData) {
-			let url = data.url();
+			let folders = name.split("/");
+			if (folders.length <= 1 || /[a-z]:/.test(folders[0])) return;
 
 			this.setState({
 				downloadingProgress: {
@@ -33,6 +34,7 @@ export class App extends Component<DownloadProps, DownloadState> {
 				downloadingNames: [...this.state.downloadingNames, name],
 			});
 
+			let url = data.url();
 			fetch(url, {
 				credentials: "same-origin",
 				headers: new Headers({
