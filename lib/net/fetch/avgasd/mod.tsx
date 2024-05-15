@@ -40,7 +40,7 @@ async function download(map: FileList, body: HTMLElement = document.body): Promi
 	body.appendChild(element);
 
 	let result = await new Promise<Map<string, Blob>>(
-		resolve => void render(html`<${DownloadApp} files=${map} onFinished=${resolve} />`, element),
+		resolve => void render(<DownloadApp files={map} onFinished={resolve} />, element),
 	);
 
 	element.remove();
