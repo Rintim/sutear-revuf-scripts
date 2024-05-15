@@ -22,68 +22,63 @@ export class App extends Component<DownloadProps, DownloadState> {
 		let totalLength = files.length;
 		let currentLength = 0;
 
-		queueMicrotask(async () => {
-			while (files.length) {
-				this.mutex.wait().then(() => {
-					let [name, data] = files.shift();
-					let url = data.url();
+		for (let [name, data] of files) {
+			this.mutex.wait().then(() => {
+				let url = data.url();
 
-					fetch(url, {
-						credentials: "same-origin",
-						headers: new Headers({
-							"User-Agent": navigator.userAgent,
-						}),
-					})
-						.then(async response => {
-							let current = 0;
-							let total = parseInt(response.headers.get("content-length"));
-							let reader = response.body.getReader();
-							let resultCollection = [] as Uint8Array[];
+				fetch(url, {
+					credentials: "same-origin",
+					headers: new Headers({
+						"User-Agent": navigator.userAgent,
+					}),
+				})
+					.then(async response => {
+						let current = 0;
+						let total = parseInt(response.headers.get("content-length"));
+						let reader = response.body.getReader();
+						let resultCollection = [] as Uint8Array[];
+
+						this.setState({
+							downloadingProgress: {
+								...this.state.downloadingProgress,
+								[name]: 0,
+							},
+							downloadingNames: [...this.state.downloadingNames, name],
+						});
+
+						while (true) {
+							const { value, done } = await reader.read();
+							if (done) {
+								result.set(name, new Blob(resultCollection));
+
+								let progress = this.state.downloadingProgress;
+								delete progress[name];
+								this.setState({
+									downloadingNames: this.state.downloadingNames.filter(key => key != name),
+									downloadingProgress: progress,
+								});
+
+								if (++currentLength >= totalLength) {
+									this.props.onFinished(result);
+								}
+								return;
+							}
+							resultCollection.push(value);
+							current += value.byteLength;
 
 							this.setState({
 								downloadingProgress: {
 									...this.state.downloadingProgress,
-									[name]: 0,
+									[name]: Math.floor((current / total) * 100) / 100,
 								},
-								downloadingNames: [...this.state.downloadingNames, name],
 							});
-
-							while (true) {
-								const { value, done } = await reader.read();
-								if (done) {
-									result.set(name, new Blob(resultCollection));
-
-									let progress = this.state.downloadingProgress;
-									delete progress[name];
-									this.setState({
-										downloadingNames: this.state.downloadingNames.filter(
-											key => key != name,
-										),
-										downloadingProgress: progress,
-									});
-
-									if (++currentLength >= totalLength) {
-										this.props.onFinished(result);
-									}
-									return;
-								}
-								resultCollection.push(value);
-								current += value.byteLength;
-
-								this.setState({
-									downloadingProgress: {
-										...this.state.downloadingProgress,
-										[name]: Math.floor((current / total) * 100) / 100,
-									},
-								});
-							}
-						})
-						.catch(e => {
-							console.error(`${name}: ${e}`);
-						});
-				});
-			}
-		});
+						}
+					})
+					.catch(e => {
+						console.error(`${name}: ${e}`);
+					});
+			});
+		}
 	}
 
 	render(_props, state: DownloadState): ComponentChild {
