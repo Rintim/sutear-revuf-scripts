@@ -4,7 +4,6 @@
 	"main": "index.js",
 	"dependencies": {
 		"@preact/signals": "^1.2.3",
-		"htm": "^3.1.1",
 		"jszip": "^3.10.1",
 		"preact": "^10.21.0"
 	}

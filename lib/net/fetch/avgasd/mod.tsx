@@ -1,11 +1,8 @@
 import JSZip from "jszip";
 import { h, render } from "preact";
-import htm from "htm";
 
 import type { FileData, FileList } from "./type";
 import { App as DownloadApp } from "./download";
-
-const html = htm.bind(h);
 
 export async function downloadFiles(
 	files: Record<string, FileData>,
