@@ -15,47 +15,75 @@ export class App extends Component<DownloadProps, DownloadState> {
 		};
 	}
 
-	componentDidMount() {
+	async componentDidMount() {
 		let result = new Map<string, Blob>();
 
 		let files = this.props.files.slice(0);
-		let totalLength = files.length;
-		let currentLength = 0;
 
-		function parse(name: string, data: FileData) {
-			let folders = name.split("/");
-			if (folders.length <= 1 || /[a-z]:/.test(folders[0])) {
-				if (++currentLength >= totalLength) {
-					this.props.onFinished(result);
-				}
-				return;
-			}
+		let fallbackCount = new Map<string, number>();
+		let currentQueue = files;
+		while (currentQueue.length) {
+			let nextLoop = currentQueue;
+			currentQueue.length = 0;
 
-			this.setState({
-				downloadingProgress: {
-					...this.state.downloadingProgress,
-					[name]: 0,
-				},
-				downloadingNames: [...this.state.downloadingNames, name],
-			});
+			let thisTurnPromises = [];
+			for (const [name, data] of nextLoop) {
+				await this.mutex.wait();
 
-			let url = data.url();
-			fetch(url, {
-				credentials: "same-origin",
-				headers: new Headers({
-					"User-Agent": navigator.userAgent,
-				}),
-			})
-				.then(async response => {
-					let current = 0;
-					let total = parseInt(response.headers.get("content-length"));
-					let reader = response.body.getReader();
-					let resultCollection = [] as Uint8Array[];
+				let folders = name.split("/");
+				if (folders.length <= 1 || /[a-z]:/.test(folders[0])) continue;
 
-					while (true) {
-						const { value, done } = await reader.read();
-						if (done) {
-							result.set(name, new Blob(resultCollection));
+				this.setState({
+					downloadingProgress: {
+						...this.state.downloadingProgress,
+						[name]: 0,
+					},
+					downloadingNames: [...this.state.downloadingNames, name],
+				});
+
+				let url = data.url();
+
+				thisTurnPromises.push(
+					fetch(url, {
+						credentials: "same-origin",
+						headers: new Headers({
+							"User-Agent": navigator.userAgent,
+						}),
+					})
+						.then(async response => {
+							let current = 0;
+							let total = parseInt(response.headers.get("content-length"));
+							let reader = response.body.getReader();
+							let resultCollection = [] as Uint8Array[];
+
+							while (true) {
+								const { value, done } = await reader.read();
+								if (done) {
+									result.set(name, new Blob(resultCollection));
+
+									let progress = this.state.downloadingProgress;
+									delete progress[name];
+									this.setState({
+										downloadingNames: this.state.downloadingNames.filter(
+											key => key != name,
+										),
+										downloadingProgress: progress,
+									});
+									break;
+								}
+								resultCollection.push(value);
+								current += value.byteLength;
+
+								this.setState({
+									downloadingProgress: {
+										...this.state.downloadingProgress,
+										[name]: Math.floor((current / total) * 10000) / 100,
+									},
+								});
+							}
+						})
+						.catch(e => {
+							console.error(`${name}: ${e}`);
 
 							let progress = this.state.downloadingProgress;
 							delete progress[name];
@@ -64,39 +92,21 @@ export class App extends Component<DownloadProps, DownloadState> {
 								downloadingProgress: progress,
 							});
 
-							if (++currentLength >= totalLength) {
-								this.props.onFinished(result);
+							if (!fallbackCount.has(name)) fallbackCount.set(name, 0);
+							let count = fallbackCount.get(name) + 1;
+							fallbackCount.set(name, count);
+
+							if (count <= 5) {
+								currentQueue.push([name, data]);
 							}
-							return;
-						}
-						resultCollection.push(value);
-						current += value.byteLength;
+						}),
+				);
+			}
 
-						this.setState({
-							downloadingProgress: {
-								...this.state.downloadingProgress,
-								[name]: Math.floor((current / total) * 10000) / 100,
-							},
-						});
-					}
-				})
-				.catch(e => {
-					console.error(`${name}: ${e}`);
-
-					let progress = this.state.downloadingProgress;
-					delete progress[name];
-					this.setState({
-						downloadingNames: this.state.downloadingNames.filter(key => key != name),
-						downloadingProgress: progress,
-					});
-				});
+			await Promise.allSettled(thisTurnPromises);
 		}
 
-		files.reduce(
-			(last, [name, data]) =>
-				last.then(this.mutex.wait.bind(this.mutex)).then(() => void parse.call(this, name, data)),
-			Promise.resolve(),
-		);
+		this.props.onFinished(result);
 	}
 
 	render(_props, state: DownloadState): ComponentChild {
