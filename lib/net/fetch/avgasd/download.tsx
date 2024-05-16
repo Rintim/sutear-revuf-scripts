@@ -24,14 +24,14 @@ export class App extends Component<DownloadProps, DownloadState> {
 		let currentQueue = files;
 		while (currentQueue.length) {
 			let nextLoop = currentQueue;
-			currentQueue.length = 0;
+			currentQueue = [];
 
 			let thisTurnPromises = [];
 			for (const [name, data] of nextLoop) {
-				await this.mutex.wait();
-
 				let folders = name.split("/");
 				if (folders.length <= 1 || /[a-z]:/.test(folders[0])) continue;
+
+				await this.mutex.wait();
 
 				this.setState({
 					downloadingProgress: {
